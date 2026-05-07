@@ -68,25 +68,27 @@ classDiagram
 
 ```mermaid
 flowchart TD
-    A([Cron / Command ejecuta el provider]) --> B{isEnabled?\n¿Son las 10:00 AM\nAmerica/Santiago?}
-    B -- No --> Z([Skip — no hace nada])
-    B -- Sí --> C[selectQueryFilter\nConsulta TenantCheckout]
+    A([Cron / Command ejecuta el provider]) --> B{isFeatureFlagEnabled?}
+    B -- No --> Z([Skip — feature desactivada])
+    B -- Sí --> C{"¿minutos actuales % 15 === 0?\n(ej: :00, :15, :30, :45)"}
+    C -- No --> Z1([Skip — fuera de intervalo])
+    C -- Sí --> D[selectQueryFilter\nConsulta TenantCheckout]
 
-    C --> C1["status = PENDING\nupdatedAt < now() − N días\nreminderXxxSentAt IS NULL\nuser.email NOT NULL\nuser.enabled = true\nEXISTS item pendiente"]
+    D --> D1["status = PENDING\nupdatedAt < now() − N días\nreminderXxxSentAt IS NULL\nuser.email NOT NULL\nuser.enabled = true\nEXISTS item pendiente"]
 
-    C1 --> D{¿Hay resultados?}
-    D -- No --> Z2([Fin — nada que enviar])
-    D -- Sí --> E[buildSubject + buildBody\nArma el contenido del email]
+    D1 --> E{¿Hay resultados?}
+    E -- No --> Z2([Fin — nada que enviar])
+    E -- Sí --> F[buildSubject + buildBody\nArma el contenido del email]
 
-    E --> F[getFromName + getFromEmail\nObtiene remitente según idioma del usuario\nvía EmailType repository]
+    F --> G[getFromName + getFromEmail\nObtiene remitente según idioma del usuario\nvía EmailType repository]
 
-    F --> G[Email enviado al usuario]
+    G --> H[Email enviado al usuario]
 
-    G --> H[onQueue\nDBAL transaction\nUPDATE tenant_checkout\nSET reminder_xxx_sent_at = now\nWHERE id IN ids enviados]
+    H --> I[onQueue\nDBAL transaction\nUPDATE tenant_checkout\nSET reminder_xxx_sent_at = now\nWHERE id IN ids enviados]
 
-    H --> I{¿Transacción OK?}
-    I -- Sí --> J([Fin exitoso])
-    I -- No --> K([rollBack + throw Exception])
+    I --> J{¿Transacción OK?}
+    J -- Sí --> K([Fin exitoso])
+    J -- No --> L([rollBack + throw Exception])
 ```
 
 ---
