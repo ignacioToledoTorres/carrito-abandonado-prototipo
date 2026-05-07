@@ -29,6 +29,8 @@ abstract class AbstractAbandonedCartReminderMailProvider extends AbstractEmailPr
 
     abstract protected function getReminderColumnName(): string;
 
+    abstract protected function isFeatureFlagEnabled(): bool;
+
     abstract protected function buildBody(array $entities = []): string;
 
     abstract protected function buildSubject(array $entities = []): string;
@@ -40,10 +42,17 @@ abstract class AbstractAbandonedCartReminderMailProvider extends AbstractEmailPr
 
     public function isEnabled(bool $force = false): bool
     {
-        $now = new \DateTime('now', new \DateTimeZone('America/Santiago'));
-        $sendTime = new \DateTime('10:00');
+        if ($force) {
+            return true;
+        }
 
-        return $force || ($now->format('Hi') === $sendTime->format('Hi'));
+        if (!$this->isFeatureFlagEnabled()) {
+            return false;
+        }
+
+        $now = new \DateTime('now', new \DateTimeZone('America/Santiago'));
+
+        return (int) $now->format('i') % 15 === 0;
     }
 
     /** @return class-string */

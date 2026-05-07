@@ -27,4 +27,22 @@ final class AbandonedCartSixDaysReminderMailProvider extends AbstractAbandonedCa
     {
         return 'reminder_six_days_sent_at';
     }
+
+    protected function isFeatureFlagEnabled(): bool
+    {
+        // TODO: inject and check feature flag service
+        return true;
+    }
+
+    protected function buildSubject(array $entities = []): string
+    {
+        // TODO: implement
+        return '';
+    }
+
+    protected function buildBody(array $entities = []): string
+    {
+        // TODO: implement
+        return '';
+    }
 }
